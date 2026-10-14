@@ -24,21 +24,11 @@ app.use(express.json({ limit: "1mb" }));
 const publicDir = path.join(__dirname, "public");
 const isVercel = Boolean(process.env.VERCEL);
 
-// Serve static assets locally with Express. Vercel also serves files from public/**
-// on its CDN, but explicit routes below provide a safe fallback when / is sent to
-// the Express function instead of being served as a static file.
+// On a local Node server, Express serves files from ./public.
+// On Vercel, files in public/** are served by Vercel's static CDN. Do not call
+// fs/sendFile for those files from inside the Function: the bundle may not contain
+// public/index.html, which causes ENOENT at /var/task/public/index.html.
 if (!isVercel) app.use(express.static(publicDir));
-
-const sendPublicFile = (filename) => (req, res, next) => {
-  res.sendFile(path.join(publicDir, filename), (err) => {
-    if (err) next(err);
-  });
-};
-
-// IMPORTANT: keep homepage routes enabled on Vercel as well as locally.
-app.get(["/", "/index.html"], sendPublicFile("index.html"));
-app.get("/style.css", sendPublicFile("style.css"));
-app.get("/app.js", sendPublicFile("app.js"));
 
 // Express 4 does not automatically forward rejected async route promises to error middleware.
 const asyncHandler = (handler) => (req, res, next) =>
