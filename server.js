@@ -4,7 +4,6 @@ import multer from "multer";
 import OpenAI from "openai";
 import XLSX from "xlsx";
 import path from "node:path";
-import fs from "node:fs";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { createClient } from "@supabase/supabase-js";
@@ -22,12 +21,12 @@ const BUCKET = process.env.SUPABASE_STORAGE_BUCKET || "agent-files";
 
 app.use(express.json({ limit: "1mb" }));
 const publicDir = path.join(__dirname, "public");
-const isVercel = Boolean(process.env.VERCEL);
+const isVercel = process.env.VERCEL === "1" || Boolean(process.env.VERCEL_ENV) || Boolean(process.env.VERCEL_URL);
 
-// On a local Node server, Express serves files from ./public.
-// On Vercel, files in public/** are served by Vercel's static CDN. Do not call
-// fs/sendFile for those files from inside the Function: the bundle may not contain
-// public/index.html, which causes ENOENT at /var/task/public/index.html.
+// On Vercel, public/** files are served by Vercel's static CDN.
+// Never access public files from the serverless Function: they may not be included
+// in its runtime bundle and can produce ENOENT at /var/task/public/....
+// Express static serving is only used for local development.
 if (!isVercel) app.use(express.static(publicDir));
 
 // Express 4 does not automatically forward rejected async route promises to error middleware.
@@ -248,8 +247,12 @@ app.post("/api/export", requireStorage, asyncHandler(async (req, res) => {
   return res.send(XLSX.utils.sheet_to_csv(ws));
 }));
 
-// Local single-page-app fallback for any other non-API URL.
-if (!isVercel) {
+// On Vercel, let the platform serve /index.html from public/**. This redirect
+// is a safe fallback if the root URL reaches the Express Function; no disk read
+// or sendFile call is made on Vercel. Locally, Express serves the SPA from ./public.
+if (isVercel) {
+  app.get("/", (_req, res) => res.redirect(302, "/index.html"));
+} else {
   app.get("*", (req, res, next) => {
     if (req.path.startsWith("/api/")) return res.status(404).json({ error: "API route nahi mili." });
     res.sendFile(path.join(publicDir, "index.html"), (err) => { if (err) next(err); });

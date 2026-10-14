@@ -1,7 +1,17 @@
 # Troubleshooting — Roman Urdu
 
-- **`ENOENT: no such file or directory, stat '/var/task/public/index.html'`**: Vercel Function public file ko disk se serve karne ki koshish kar rahi thi. Is build mein Vercel par `sendFile` routes hata diye gaye hain. Confirm karein ke newest ZIP ki files root par upload hui hain aur naya deployment bana hai.
-- **Homepage 404**: `public/index.html` GitHub repo ke root ke andar `public/` folder mein hona chahiye; Vercel Root Directory sahi select honi chahiye.
-- **`/api/health` returns 503**: `SUPABASE_URL` aur `SUPABASE_SERVICE_ROLE_KEY` Vercel Environment Variables mein add karein. Check karein `supabase-schema.sql` run ki hui hai.
-- **Upload fails**: Supabase Storage mein `agent-files` bucket schema/setup ke mutabiq mojood ho.
-- Secret keys, passwords, ya `.env` ko GitHub par commit na karein.
+## Agar `ENOENT: no such file or directory, stat '/var/task/public/index.html'` aaye
+
+1. Confirm karein ke latest ZIP ki extracted files sahi GitHub repository mein commit hui hain.
+2. `public/index.html`, `public/style.css` aur `public/app.js` GitHub par maujood hon.
+3. Vercel ke Project Settings → Git mein wahi repository selected ho jismein aapne files update ki hain.
+4. Deployments mein latest commit ko redeploy karein.
+5. Homepage aur `/index.html` test karein. CSS/JS load na ho to direct `/style.css` aur `/app.js` paths check karein.
+
+## Agar `/api/health` 503 de
+
+Supabase `SUPABASE_URL` aur `SUPABASE_SERVICE_ROLE_KEY` Vercel Environment Variables mein set hon. `supabase-schema.sql` Supabase SQL Editor mein run ki gayi ho. Values ko public GitHub repository mein na rakhein.
+
+## Agar error phir bhi aaye
+
+Vercel Runtime Logs mein latest request ka exact red error message copy karein. API keys, passwords ya secret values share na karein.

@@ -24,3 +24,11 @@ Database aur file uploads ke liye Vercel → Settings → Environment Variables 
 ## Agar homepage phir bhi 404 ho
 
 Check karein ke Vercel Project → Settings → General mein Root Directory sahi hai aur GitHub ke project root mein `public/index.html` maujood hai. Latest deployment ke Build Logs aur Runtime Logs check karein.
+
+## ENOENT / Page nahi mili error ke liye khas note
+
+- Vercel par `public/index.html`, `public/style.css`, aur `public/app.js` static files CDN se serve hoti hain. Serverless function se `sendFile` ya `express.static` ke zariye in files ko read karne ki koshish na karein. Is build mein Vercel par root `/` ko `/index.html` par rewrite kiya gaya hai.
+- GitHub repository ke root par `package.json`, `server.js`, `vercel.json`, aur `public/` folder direct nazar aane chahiyein; in sab ko kisi doosre nested folder ke andar na rakhein.
+- Vercel project wahi repository deploy karta hai jo us se connected hai. Agar aapka project dashboard mein `miniature-tribble` naam se hai, to us project ki **Settings → Git** mein check karein ke yahi updated repository connected hai. Warna nayi repository import karke naya project deploy karein.
+- ZIP ko Vercel ke deployment page par seedha upload karne ke bajaye extracted files GitHub par commit karein, phir naya deployment chalayein.
+
