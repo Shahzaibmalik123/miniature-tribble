@@ -5,6 +5,8 @@ import OpenAI from "openai";
 import XLSX from "xlsx";
 import path from "node:path";
 import crypto from "node:crypto";
+import pdfParse from "pdf-parse/lib/pdf-parse.js";
+import mammoth from "mammoth";
 import { fileURLToPath } from "node:url";
 import { createClient } from "@supabase/supabase-js";
 
@@ -53,13 +55,16 @@ const asyncHandler = (handler) => (req, res, next) =>
   Promise.resolve(handler(req, res, next)).catch(next);
 
 const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
-const allowedExt = new Set([".csv", ".txt", ".md", ".json", ".xlsx", ".xls"]);
+// Almost every file type is accepted. Only executable/installer types are blocked.
+const blockedExt = new Set([".exe", ".msi", ".bat", ".cmd", ".com", ".scr", ".dll", ".apk", ".ps1", ".vbs", ".jar"]);
+// Types whose contents are read as plain text.
+const textExt = new Set([".txt", ".md", ".tsv", ".log", ".xml", ".html", ".htm", ".yaml", ".yml", ".rtf"]);
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: MAX_FILE_MB * 1024 * 1024, files: 1 },
   fileFilter: (_req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
-    if (!allowedExt.has(ext)) return cb(new Error("Unsupported file type. CSV, TXT, MD, JSON, XLSX, XLS allowed hain."));
+    if (blockedExt.has(ext)) return cb(new Error("Security ki wajah se is type ki file (exe, msi, bat, jar waghera) allowed nahi hai."));
     cb(null, true);
   }
 });
@@ -72,7 +77,28 @@ function failSupabase(error, res, fallback = "Database request fail ho gayi.") {
   console.error(fallback, error?.message || error);
   return res.status(500).json({ error: fallback + " Supabase SQL setup aur environment variables check karein." });
 }
-function extractFile(buffer, ext) {
+// Postgres text columns reject NUL characters, which some PDFs contain.
+const cleanText = (value) => String(value ?? "").replace(/\u0000/g, "");
+const countLines = (value) => value.split(/\r?\n/).filter((l) => l.trim()).length;
+
+async function extractFile(buffer, ext, originalName = "file") {
+  if (ext === ".pdf") {
+    const parsed = await pdfParse(buffer);
+    const text = cleanText(parsed.text).trim();
+    if (!text) {
+      return { text: `[${originalName}: PDF save ho gayi, lekin is mein text nahi mila (shayad scanned/image wali PDF hai).]`, rowCount: parsed.numpages || 0, structured: null };
+    }
+    return { text: text.slice(0, 250_000), rowCount: countLines(text), structured: null };
+  }
+  if (ext === ".docx") {
+    const { value } = await mammoth.extractRawText({ buffer });
+    const text = cleanText(value).trim();
+    return { text: (text || `[${originalName}: Word file mein text nahi mila.]`).slice(0, 250_000), rowCount: countLines(text), structured: null };
+  }
+  if (![".xlsx", ".xls", ".csv", ".json"].includes(ext) && !textExt.has(ext)) {
+    // Images, PowerPoint, zip and other binary types: the file is stored, but no text can be read from it.
+    return { text: `[${originalName}: file save ho gayi, lekin is type (${ext || "unknown"}) ka text nahi nikala ja sakta.]`, rowCount: 0, structured: null };
+  }
   if ([".xlsx", ".xls", ".csv"].includes(ext)) {
     const workbook = XLSX.read(buffer, { type: "buffer", cellDates: true });
     const sheets = {};
@@ -130,7 +156,9 @@ app.post("/api/upload", requireStorage, (req, res, next) => {
   const storedName = `${id}${ext}`;
   const storagePath = `${id}/${storedName}`;
   try {
-    const { text, rowCount } = extractFile(req.file.buffer, ext);
+    const extracted = await extractFile(req.file.buffer, ext, path.basename(req.file.originalname));
+    const text = cleanText(extracted.text);
+    const rowCount = extracted.rowCount;
     const { error: storageError } = await supabase.storage.from(BUCKET).upload(storagePath, req.file.buffer, {
       contentType: req.file.mimetype || "application/octet-stream", upsert: false
     });

@@ -13,8 +13,10 @@
     "@supabase/supabase-js": "^2.57.4",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "mammoth": "^1.8.0",
     "multer": "^2.0.2",
     "openai": "^4.85.4",
+    "pdf-parse": "1.1.1",
     "xlsx": "^0.18.5"
   },
   "devDependencies": { "vercel": "^47.0.5" }
