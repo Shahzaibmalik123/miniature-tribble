@@ -20,6 +20,25 @@ const supabase = (supabaseUrl && supabaseKey)
 const BUCKET = process.env.SUPABASE_STORAGE_BUCKET || "agent-files";
 
 app.use(express.json({ limit: "1mb" }));
+
+// --- Password protection for all /api routes ---
+const APP_PASSWORD = process.env.APP_PASSWORD || "";
+const sha = (v) => crypto.createHash("sha256").update(String(v)).digest();
+app.use("/api", (req, res, next) => {
+  if (!APP_PASSWORD) {
+    return res.status(503).json({ error: "APP_PASSWORD set nahi hai. Vercel Environment Variables mein APP_PASSWORD add karein." });
+  }
+  const header = req.headers.authorization || "";
+  let supplied = "";
+  if (header.startsWith("Basic ")) {
+    const decoded = Buffer.from(header.slice(6), "base64").toString("utf8");
+    supplied = decoded.slice(decoded.indexOf(":") + 1);
+  }
+  if (supplied && crypto.timingSafeEqual(sha(supplied), sha(APP_PASSWORD))) return next();
+  res.set("WWW-Authenticate", 'Basic realm="Data Agent", charset="UTF-8"');
+  return res.status(401).json({ error: "Password zaroori hai." });
+});
+
 const publicDir = path.join(__dirname, "public");
 const isVercel = process.env.VERCEL === "1" || Boolean(process.env.VERCEL_ENV) || Boolean(process.env.VERCEL_URL);
 
