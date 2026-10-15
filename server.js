@@ -23,22 +23,39 @@ const BUCKET = process.env.SUPABASE_STORAGE_BUCKET || "agent-files";
 
 app.use(express.json({ limit: "1mb" }));
 
-// --- Password protection for all /api routes ---
+// --- Password login for all /api routes (login screen on the page, signed session token) ---
 const APP_PASSWORD = process.env.APP_PASSWORD || "";
+const SESSION_DAYS = 14;
 const sha = (v) => crypto.createHash("sha256").update(String(v)).digest();
+// The signing key is derived from APP_PASSWORD, so changing the password logs everyone out.
+const tokenKey = () => crypto.createHash("sha256").update("session-key:" + APP_PASSWORD).digest();
+const signToken = (exp) => `${exp}.${crypto.createHmac("sha256", tokenKey()).update(String(exp)).digest("base64url")}`;
+function verifyToken(token) {
+  const [exp, sig] = String(token || "").split(".");
+  if (!exp || !sig || !/^\d+$/.test(exp) || Number(exp) < Date.now()) return false;
+  const expected = crypto.createHmac("sha256", tokenKey()).update(exp).digest("base64url");
+  const a = Buffer.from(sig), b = Buffer.from(expected);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+const passwordMissing = (res) => res.status(503).json({ error: "APP_PASSWORD set nahi hai. Vercel Environment Variables mein APP_PASSWORD add karein." });
+
+app.post("/api/login", async (req, res) => {
+  if (!APP_PASSWORD) return passwordMissing(res);
+  const supplied = String(req.body?.password || "");
+  if (supplied && crypto.timingSafeEqual(sha(supplied), sha(APP_PASSWORD))) {
+    const exp = Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000;
+    return res.json({ ok: true, token: signToken(exp), expiresAt: exp });
+  }
+  await new Promise((resolve) => setTimeout(resolve, 700)); // slows down password guessing
+  return res.status(401).json({ error: "Password ghalat hai." });
+});
+
 app.use("/api", (req, res, next) => {
-  if (!APP_PASSWORD) {
-    return res.status(503).json({ error: "APP_PASSWORD set nahi hai. Vercel Environment Variables mein APP_PASSWORD add karein." });
-  }
+  if (!APP_PASSWORD) return passwordMissing(res);
   const header = req.headers.authorization || "";
-  let supplied = "";
-  if (header.startsWith("Basic ")) {
-    const decoded = Buffer.from(header.slice(6), "base64").toString("utf8");
-    supplied = decoded.slice(decoded.indexOf(":") + 1);
-  }
-  if (supplied && crypto.timingSafeEqual(sha(supplied), sha(APP_PASSWORD))) return next();
-  res.set("WWW-Authenticate", 'Basic realm="Data Agent", charset="UTF-8"');
-  return res.status(401).json({ error: "Password zaroori hai." });
+  const token = header.startsWith("Bearer ") ? header.slice(7) : "";
+  if (verifyToken(token)) return next();
+  return res.status(401).json({ error: "Pehle password se login karein.", code: "login_required" });
 });
 
 const publicDir = path.join(__dirname, "public");

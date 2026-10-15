@@ -9,8 +9,27 @@ function toast(message, error = false) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.className = "toast", 3400);
 }
+const TOKEN_KEY = "agentSessionToken";
+const getToken = () => { try { return localStorage.getItem(TOKEN_KEY) || ""; } catch { return ""; } };
+const setToken = (value) => { try { value ? localStorage.setItem(TOKEN_KEY, value) : localStorage.removeItem(TOKEN_KEY); } catch {} };
+const authHeaders = () => { const token = getToken(); return token ? { Authorization: `Bearer ${token}` } : {}; };
+function showLogin(message = "") {
+  document.body.classList.add("locked");
+  $("loginOverlay").hidden = false;
+  $("loginError").textContent = message;
+  $("loginPassword").value = "";
+  setTimeout(() => $("loginPassword").focus(), 50);
+}
+function unlockApp() {
+  document.body.classList.remove("locked");
+  $("loginOverlay").hidden = true;
+}
 async function api(url, options = {}) {
-  const response = await fetch(url, options);
+  const response = await fetch(url, { ...options, headers: { ...(options.headers || {}), ...authHeaders() } });
+  if (response.status === 401 && url !== "/api/login") {
+    setToken("");
+    showLogin("Session khatam ho gaya, dobara password likhein.");
+  }
   const contentType = response.headers.get("content-type") || "";
   if (!response.ok) {
     const data = contentType.includes("application/json") ? await response.json() : { error: await response.text() };
@@ -95,9 +114,10 @@ async function exportData() {
   button.disabled = true; button.textContent = "Generating…";
   try {
     const response = await fetch("/api/export", {
-      method: "POST", headers: { "Content-Type": "application/json" },
+      method: "POST", headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({ format, title, fileIds: files.map(f => f.id) })
     });
+    if (response.status === 401) { setToken(""); showLogin("Session khatam ho gaya, dobara password likhein."); }
     if (!response.ok) {
       let message = "Export create nahi ho saka.";
       try { message = (await response.json()).error || message; } catch {}
@@ -128,15 +148,44 @@ function setup() {
     else if (tab === "assistant") $("assistantSection").scrollIntoView({ behavior: "smooth", block: "start" });
     else window.scrollTo({ top: 0, behavior: "smooth" });
   }));
+  $("loginForm").addEventListener("submit", login);
+  $("logoutButton").addEventListener("click", logout);
+  if (getToken()) { unlockApp(); loadData(); } else showLogin();
+}
+function loadData() {
   api("/api/health").then(info => {
     $("serverStatus").textContent = "Server connected";
     document.querySelector(".server-status").classList.add("online");
     $("aiState").textContent = info.aiConfigured ? "Connected" : "Basic mode";
     $("aiHint").textContent = info.aiConfigured ? "AI model connected" : "Add API key for AI answers";
   }).catch(() => {
+    if (!$("loginOverlay").hidden) return;
     $("serverStatus").textContent = "Server unavailable";
     $("aiHint").textContent = "Start the server to begin";
   });
-  refreshFiles().catch(e => toast(e.message, true));
+  refreshFiles().catch(e => { if ($("loginOverlay").hidden) toast(e.message, true); });
+}
+async function login(event) {
+  event.preventDefault();
+  const button = $("loginButton");
+  button.disabled = true; button.textContent = "Checking…"; $("loginError").textContent = "";
+  try {
+    const result = await api("/api/login", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: $("loginPassword").value })
+    });
+    setToken(result.token);
+    unlockApp();
+    loadData();
+  } catch (e) {
+    $("loginError").textContent = e.message;
+    $("loginPassword").select();
+  } finally { button.disabled = false; button.textContent = "Login"; }
+}
+function logout() {
+  setToken("");
+  files = [];
+  renderFiles();
+  showLogin();
 }
 setup();

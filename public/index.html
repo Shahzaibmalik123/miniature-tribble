@@ -8,7 +8,17 @@
   <meta name="description" content="Awais Nagar 31320356 Markaz Allah Jewaya Lar Agent — AI-powered data workspace.">
   <link rel="stylesheet" href="/style.css">
 </head>
-<body>
+<body class="locked">
+  <div class="login-overlay" id="loginOverlay" hidden>
+    <form class="login-card" id="loginForm">
+      <div class="login-icon">✦</div>
+      <h2>Awais Nagar Agent</h2>
+      <p>Aage barhne ke liye password likhein.</p>
+      <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" required>
+      <div class="login-error" id="loginError" role="alert"></div>
+      <button class="primary" id="loginButton" type="submit">Login</button>
+    </form>
+  </div>
   <div class="shell">
     <aside class="sidebar">
       <div class="brand" aria-label="Awais Nagar 31320356 Markaz Allah Jewaya Lar Agent"><div class="brand-icon">✦</div><div class="brand-name"><b>Awais Nagar</b><small>31320356 · MARKAZ ALLAH JEWAYA LAR</small><span>AGENT</span></div></div>
@@ -19,7 +29,7 @@
       <div class="sidebar-bottom"><div class="status-dot"></div><div><b>Cloud storage</b><small>Your files are saved with Supabase</small></div></div>
     </aside>
     <main class="main">
-      <header class="topbar"><div><div class="eyebrow">PERSONAL WORKSPACE</div><h1 id="pageTitle">Your data, ready to work.</h1></div><div class="top-actions"><span class="server-status"><i></i><span id="serverStatus">Checking server…</span></span><button class="primary small" id="topUpload">＋ Upload files</button></div></header>
+      <header class="topbar"><div><div class="eyebrow">PERSONAL WORKSPACE</div><h1 id="pageTitle">Your data, ready to work.</h1></div><div class="top-actions"><span class="server-status"><i></i><span id="serverStatus">Checking server…</span></span><button class="primary small" id="topUpload">＋ Upload files</button><button class="outline-button" id="logoutButton" type="button">Logout</button></div></header>
       <section class="hero">
         <div class="hero-copy"><span class="pill">✦ YOUR PERSONAL DATA AGENT</span><h2>Turn your files into<br><em>useful answers.</em></h2><p>Upload your data once. Ask questions, collect insights, and export a fresh file whenever you need it.</p><button class="light-button" id="heroUpload">Upload your first file <span>→</span></button></div>
         <div class="hero-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="core">✦</div><div class="float-card card-a"><span>▤</span><div><b>Data collected</b><small>Ready to explore</small></div></div><div class="float-card card-b"><span class="spark">✧</span><div><b>AI insights</b><small>Ask in plain language</small></div></div><div class="float-card card-c">↗ <b>Export</b></div></div>
