@@ -14,3 +14,9 @@ body.locked .shell{display:none}
 .login-card .primary{width:100%;padding:13px;border-radius:12px;font-size:15px}
 .top-actions{gap:10px}
 #logoutButton{padding:9px 14px}
+
+.download-file{border:0;background:#f1effe;color:#6044e8;border-radius:7px;width:29px;height:29px;cursor:pointer;font-size:15px;font-weight:700;margin-left:auto}
+.download-file:hover{background:#e4defd}
+.download-file:disabled{opacity:.5;cursor:default}
+.download-file+.delete-file{margin-left:6px}
+.file-list{max-height:420px;overflow-y:auto}

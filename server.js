@@ -219,6 +219,19 @@ app.post("/api/upload", requireStorage, (req, res, next) => {
   }
 }));
 
+app.get("/api/files/:id/download", requireStorage, asyncHandler(async (req, res) => {
+  const { data: file, error } = await supabase.from("files").select("original_name, storage_path").eq("id", req.params.id).maybeSingle();
+  if (error) return failSupabase(error, res, "File lookup fail ho gaya.");
+  if (!file || !file.storage_path) return res.status(404).json({ error: "File nahi mili." });
+  // A short-lived link straight from Supabase Storage: the original bytes, saved under the original file name.
+  const { data, error: urlError } = await supabase.storage.from(BUCKET).createSignedUrl(file.storage_path, 60, { download: file.original_name });
+  if (urlError || !data?.signedUrl) {
+    console.error("Download link failed:", urlError?.message);
+    return res.status(500).json({ error: "Download link nahi ban saka: " + (urlError?.message || "unknown error") });
+  }
+  res.json({ url: data.signedUrl, name: file.original_name });
+}));
+
 app.delete("/api/files/:id", requireStorage, asyncHandler(async (req, res) => {
   const { data: file, error: findError } = await supabase.from("files").select("id, storage_path").eq("id", req.params.id).maybeSingle();
   if (findError) return failSupabase(findError, res, "File lookup fail ho gaya.");

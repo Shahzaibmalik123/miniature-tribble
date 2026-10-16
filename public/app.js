@@ -52,7 +52,8 @@ function renderFiles() {
     $("emptyUpload").addEventListener("click", chooseFile);
     return;
   }
-  $("fileList").innerHTML = files.slice(0, 6).map(f => `<div class="file-row"><div class="file-icon">${escapeHtml(extLabel(f))}</div><div class="file-info"><b title="${escapeHtml(f.original_name)}">${escapeHtml(f.original_name)}</b><small>${Number(f.row_count || 0).toLocaleString()} rows/lines · ${new Date(f.uploaded_at).toLocaleDateString()}</small></div><button class="delete-file" title="Delete file" aria-label="Delete ${escapeHtml(f.original_name)}" data-delete="${escapeHtml(f.id)}">×</button></div>`).join("");
+  $("fileList").innerHTML = files.map(f => `<div class="file-row"><div class="file-icon">${escapeHtml(extLabel(f))}</div><div class="file-info"><b title="${escapeHtml(f.original_name)}">${escapeHtml(f.original_name)}</b><small>${Number(f.row_count || 0).toLocaleString()} rows/lines · ${new Date(f.uploaded_at).toLocaleDateString()}</small></div><button class="download-file" title="Download original file" aria-label="Download ${escapeHtml(f.original_name)}" data-download="${escapeHtml(f.id)}">↓</button><button class="delete-file" title="Delete file" aria-label="Delete ${escapeHtml(f.original_name)}" data-delete="${escapeHtml(f.id)}">×</button></div>`).join("");
+  document.querySelectorAll("[data-download]").forEach(btn => btn.addEventListener("click", () => downloadFile(btn.dataset.download, btn)));
   document.querySelectorAll("[data-delete]").forEach(btn => btn.addEventListener("click", () => deleteFile(btn.dataset.delete)));
 }
 async function refreshFiles() {
@@ -73,6 +74,17 @@ async function uploadFile(file) {
     $("aiHint").textContent = "Your data is ready";
   } catch (e) { toast(e.message, true); }
   $("fileInput").value = "";
+}
+async function downloadFile(id, button) {
+  button.disabled = true;
+  try {
+    const { url, name } = await api(`/api/files/${encodeURIComponent(id)}/download`);
+    const a = document.createElement("a");
+    a.href = url; a.download = name; a.rel = "noopener";
+    document.body.appendChild(a); a.click(); a.remove();
+    toast(`${name} download ho rahi hai.`);
+  } catch (e) { toast(e.message, true); }
+  finally { button.disabled = false; }
 }
 async function deleteFile(id) {
   if (!confirm("Kya aap is saved file ko delete karna chahte hain?")) return;
