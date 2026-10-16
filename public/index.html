@@ -3,65 +3,73 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0b1020">
-  <title>Awais Nagar 31320356 Markaz Allah Jewaya Lar Agent</title>
-  <meta name="description" content="Awais Nagar 31320356 Markaz Allah Jewaya Lar Agent — AI-powered data workspace.">
+  <meta name="theme-color" content="#101a2b">
+  <title>Masroor Hassan | Data Workspace</title>
+  <meta name="description" content="Masroor Hassan data workspace: upload files, ask questions and export results.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Public+Sans:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="/style.css">
 </head>
 <body class="locked">
   <div class="login-overlay" id="loginOverlay" hidden>
     <form class="login-card" id="loginForm">
-      <div class="login-icon">✦</div>
-      <h2>Welcome to Awais Nagar Data Agent</h2>
+      <div class="monogram" aria-hidden="true">MH</div>
+      <h2>Welcome to Masroor Hassan Data Agent</h2>
       <p>Aage barhne ke liye password likhein.</p>
-      <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" required>
+      <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" aria-label="Password" required>
       <div class="login-error" id="loginError" role="alert"></div>
       <button class="primary" id="loginButton" type="submit">Login</button>
     </form>
   </div>
   <div class="shell">
     <aside class="sidebar">
-      <div class="brand" aria-label="Awais Nagar 31320356 Markaz Allah Jewaya Lar Agent"><div class="brand-icon">✦</div><div class="brand-name"><b>Awais Nagar</b><small>31320356 · MARKAZ ALLAH JEWAYA LAR</small><span>AGENT</span></div></div>
-      <div class="side-label">WORKSPACE</div>
-      <button class="nav active" data-tab="overview"><span>◫</span> Overview</button>
-      <button class="nav" data-tab="files"><span>▤</span> My data files <span class="nav-count" id="navCount">0</span></button>
-      <button class="nav" data-tab="assistant"><span>✧</span> AI assistant</button>
-      <div class="sidebar-bottom"><div class="status-dot"></div><div><b>Cloud storage</b><small>Your files are saved with Supabase</small></div></div>
+      <div class="brand" aria-label="Masroor Hassan"><div class="monogram" aria-hidden="true">MH</div><div class="brand-name"><b>Masroor Hassan</b><small>Data workspace</small></div></div>
+      <nav class="side-nav" aria-label="Sections">
+        <button class="nav active" data-tab="overview"><span aria-hidden="true">◫</span> Overview</button>
+        <button class="nav" data-tab="files"><span aria-hidden="true">▤</span> My data files <span class="nav-count" id="navCount">0</span></button>
+        <button class="nav" data-tab="assistant"><span aria-hidden="true">✧</span> AI assistant</button>
+      </nav>
+      <div class="sidebar-bottom"><div class="status-dot"></div><div><b>Cloud storage</b><small>Files are saved securely</small></div></div>
     </aside>
     <main class="main">
-      <header class="topbar"><div><div class="eyebrow">PERSONAL WORKSPACE</div><h1 id="pageTitle">Your data, ready to work.</h1></div><div class="top-actions"><span class="server-status"><i></i><span id="serverStatus">Checking server…</span></span><button class="primary small" id="topUpload">＋ Upload files</button><button class="outline-button" id="logoutButton" type="button">Logout</button></div></header>
-      <section class="hero">
-        <div class="hero-copy"><span class="pill">✦ YOUR PERSONAL DATA AGENT</span><h2>Turn your files into<br><em>useful answers.</em></h2><p>Upload your data once. Ask questions, collect insights, and export a fresh file whenever you need it.</p><button class="light-button" id="heroUpload">Upload your first file <span>→</span></button></div>
-        <div class="hero-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="core">✦</div><div class="float-card card-a"><span>▤</span><div><b>Data collected</b><small>Ready to explore</small></div></div><div class="float-card card-b"><span class="spark">✧</span><div><b>AI insights</b><small>Ask in plain language</small></div></div><div class="float-card card-c">↗ <b>Export</b></div></div>
+      <header class="topbar">
+        <div class="title-block"><h1 id="pageTitle">Masroor Hassan</h1><p>Upload your files, ask questions about them and export the results.</p></div>
+        <div class="top-actions"><span class="server-status"><i></i><span id="serverStatus">Checking server…</span></span><button class="primary small" id="topUpload">Upload files</button><button class="outline-button" id="logoutButton" type="button">Logout</button></div>
+      </header>
+      <section class="dropzone" id="dropZone" aria-label="Upload files">
+        <div class="drop-icon" aria-hidden="true">↥</div>
+        <div class="drop-text"><h2>Drop files here to upload</h2><p>PDF, Word, Excel, CSV and text files, up to 4 MB each.</p></div>
+        <button class="primary" id="heroUpload" type="button">Choose files</button>
       </section>
       <section class="stats">
-        <article class="stat"><div class="stat-icon purple">▤</div><div><span>Uploaded files</span><strong id="statFiles">0</strong><small>Saved in your workspace</small></div></article>
-        <article class="stat"><div class="stat-icon blue">▦</div><div><span>Rows / lines</span><strong id="statRows">0</strong><small>Across your uploaded data</small></div></article>
-        <article class="stat"><div class="stat-icon green">✧</div><div><span>AI assistant</span><strong id="aiState">Ready</strong><small id="aiHint">Waiting for your data</small></div></article>
+        <article class="stat"><span>Uploaded files</span><strong id="statFiles">0</strong><small>Saved in your workspace</small></article>
+        <article class="stat"><span>Rows and lines</span><strong id="statRows">0</strong><small>Across all uploaded data</small></article>
+        <article class="stat"><span>AI assistant</span><strong id="aiState">Ready</strong><small id="aiHint">Waiting for your data</small></article>
       </section>
       <section class="content-grid">
         <article class="panel files-panel" id="filesSection">
-          <div class="panel-heading"><div><h3>Your data files</h3><p>Saved files that your agent can search</p></div><button class="text-button" id="viewAll">View all <span>→</span></button></div>
-          <div id="fileList" class="file-list"><div class="empty-state"><div class="empty-icon">▤</div><b>No files yet</b><p>Upload a CSV, Excel, TXT, JSON, or Markdown file to get started.</p><button class="outline-button" id="emptyUpload">＋ Choose a file</button></div></div>
+          <div class="panel-heading"><div><h3>Your data files</h3><p>Saved files that the assistant can search</p></div><button class="text-button" id="viewAll">View all</button></div>
+          <div id="fileList" class="file-list"><div class="empty-state"><div class="empty-icon">▤</div><b>No files yet</b><p>Upload a PDF, Word, Excel, CSV or text file to get started.</p><button class="outline-button" id="emptyUpload">Choose a file</button></div></div>
         </article>
         <article class="panel export-panel">
-          <div class="panel-heading"><div><h3>Create an export</h3><p>Download collected data as a new file</p></div><div class="export-icon">↧</div></div>
+          <div class="panel-heading"><div><h3>Create an export</h3><p>Download your data as a new file</p></div></div>
           <label for="exportName">File name</label><input id="exportName" value="my-collected-data" maxlength="60">
           <label>Export format</label><div class="format-options"><label class="format-option selected"><input type="radio" name="format" value="xlsx" checked><b>XLSX</b><small>Excel workbook</small></label><label class="format-option"><input type="radio" name="format" value="csv"><b>CSV</b><small>Comma-separated</small></label><label class="format-option"><input type="radio" name="format" value="json"><b>JSON</b><small>Structured data</small></label><label class="format-option"><input type="radio" name="format" value="txt"><b>TXT</b><small>Text records</small></label></div>
-          <div class="export-note"><span>ⓘ</span> Exports include data from all saved files. Upload only files you are allowed to use.</div><button class="primary export-button" id="exportButton">Generate & download <span>↗</span></button>
+          <div class="export-note">Exports include data from all saved files. Upload only files you are allowed to use.</div><button class="primary export-button" id="exportButton">Generate and download</button>
         </article>
       </section>
       <section class="panel assistant-panel" id="assistantSection">
-        <div class="panel-heading"><div><h3><span class="assistant-symbol">✧</span> Ask your data agent</h3><p>Roman Urdu ya English mein apna sawal likhein.</p></div><span class="ai-badge">AI WORKSPACE</span></div>
+        <div class="panel-heading"><div><h3>Ask your data agent</h3><p>Roman Urdu ya English mein apna sawal likhein.</p></div></div>
         <div class="suggestions"><button class="suggestion">Meri files ka summary do</button><button class="suggestion">Data mein kya information hai?</button><button class="suggestion">Duplicates check karne mein help karo</button></div>
-        <div id="chatMessages" class="chat-messages"><div class="assistant-message"><div class="avatar">✧</div><div><b>Awais Nagar Agent</b><p>Assalam-o-alaikum! Apni data file upload karein, phir mujh se us data ke baare mein sawal pooch sakte hain.</p></div></div></div>
-        <form id="chatForm" class="chat-form"><input id="chatInput" autocomplete="off" placeholder="Misal: meri Excel file mein total students kitne hain?" maxlength="4000"><button class="send-button" aria-label="Send message">↑</button></form>
-        <div class="chat-foot">Answers aapki saved files par based honge. Important results ko original data se verify karein.</div>
+        <div id="chatMessages" class="chat-messages"><div class="assistant-message"><div class="avatar">MH</div><div><b>Masroor Hassan Agent</b><p>Assalam-o-alaikum! Apni data file upload karein, phir mujh se us data ke baare mein sawal pooch sakte hain.</p></div></div></div>
+        <form id="chatForm" class="chat-form"><input id="chatInput" autocomplete="off" placeholder="Misal: Muhammad Nawaz ka result batao" aria-label="Your question" maxlength="4000"><button class="send-button" aria-label="Send message">↑</button></form>
+        <div class="chat-foot">Answers aap ki saved files par based hote hain. Important results ko original data se verify karein.</div>
       </section>
-      <footer>Awais Nagar 31320356 Markaz Allah Jewaya Lar Agent <span>•</span> Personal data workspace <span class="footer-right">Built for your workflow</span></footer>
+      <footer>Masroor Hassan <span>·</span> Data workspace</footer>
     </main>
   </div>
-  <input type="file" id="fileInput" hidden>
+  <input type="file" id="fileInput" multiple hidden>
   <div class="toast" id="toast" role="status"></div>
   <script src="/app.js"></script>
 </body>

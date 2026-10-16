@@ -48,7 +48,7 @@ function renderFiles() {
   $("statFiles").textContent = files.length;
   $("statRows").textContent = files.reduce((sum, f) => sum + Number(f.row_count || 0), 0).toLocaleString();
   if (!files.length) {
-    $("fileList").innerHTML = `<div class="empty-state"><div class="empty-icon">▤</div><b>No files yet</b><p>Upload a CSV, Excel, TXT, JSON, or Markdown file to get started.</p><button class="outline-button" id="emptyUpload">＋ Choose a file</button></div>`;
+    $("fileList").innerHTML = `<div class="empty-state"><div class="empty-icon">▤</div><b>No files yet</b><p>Upload a PDF, Word, Excel, CSV or text file to get started.</p><button class="outline-button" id="emptyUpload">Choose a file</button></div>`;
     $("emptyUpload").addEventListener("click", chooseFile);
     return;
   }
@@ -86,8 +86,8 @@ function addMessage(text, who) {
     const p = document.createElement("p"); p.textContent = text; wrapper.appendChild(p);
   } else {
     wrapper.className = "assistant-message";
-    const avatar = document.createElement("div"); avatar.className = "avatar"; avatar.textContent = "✧";
-    const body = document.createElement("div"); const b = document.createElement("b"); b.textContent = "Awais Nagar Agent";
+    const avatar = document.createElement("div"); avatar.className = "avatar"; avatar.textContent = "MH";
+    const body = document.createElement("div"); const b = document.createElement("b"); b.textContent = "Masroor Hassan Agent";
     const p = document.createElement("p"); p.textContent = text; body.append(b, p); wrapper.append(avatar, body);
   }
   $("chatMessages").appendChild(wrapper);
@@ -129,11 +129,21 @@ async function exportData() {
     document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
     toast("Aapki export file download ho rahi hai.");
   } catch (e) { toast(e.message, true); }
-  finally { button.disabled = false; button.innerHTML = 'Generate & download <span>↗</span>'; }
+  finally { button.disabled = false; button.textContent = 'Generate and download'; }
 }
 function setup() {
   ["topUpload", "heroUpload", "emptyUpload"].forEach(id => { const el = $(id); if (el) el.addEventListener("click", chooseFile); });
-  $("fileInput").addEventListener("change", e => uploadFile(e.target.files[0]));
+  $("fileInput").addEventListener("change", async e => {
+    const picked = [...e.target.files];
+    e.target.value = "";
+    for (const file of picked) await uploadFile(file);
+  });
+  const zone = $("dropZone");
+  ["dragenter", "dragover"].forEach(type => zone.addEventListener(type, e => { e.preventDefault(); zone.classList.add("dragging"); }));
+  ["dragleave", "drop"].forEach(type => zone.addEventListener(type, e => { e.preventDefault(); zone.classList.remove("dragging"); }));
+  zone.addEventListener("drop", async e => { for (const file of [...e.dataTransfer.files]) await uploadFile(file); });
+  // A file dropped outside the box should not make the browser open it.
+  ["dragover", "drop"].forEach(type => window.addEventListener(type, e => { if (!zone.contains(e.target)) e.preventDefault(); }));
   $("exportButton").addEventListener("click", exportData);
   $("chatForm").addEventListener("submit", e => { e.preventDefault(); askAgent($("chatInput").value); });
   document.querySelectorAll(".suggestion").forEach(btn => btn.addEventListener("click", () => askAgent(btn.textContent)));
@@ -157,7 +167,7 @@ function loadData() {
     $("serverStatus").textContent = "Server connected";
     document.querySelector(".server-status").classList.add("online");
     $("aiState").textContent = info.aiConfigured ? "Connected" : "Basic mode";
-    $("aiHint").textContent = info.aiConfigured ? "AI model connected" : "Add API key for AI answers";
+    $("aiHint").textContent = info.aiConfigured ? "AI model connected" : "Keyword search only";
   }).catch(() => {
     if (!$("loginOverlay").hidden) return;
     $("serverStatus").textContent = "Server unavailable";
