@@ -8,6 +8,7 @@ import crypto from "node:crypto";
 import pdfParse from "pdf-parse/lib/pdf-parse.js";
 import mammoth from "mammoth";
 import { TOOLS, runTool, answerWithoutAI } from "./retrieval.js";
+import { extractPptx, readWithAI, imageMime } from "./readers.js";
 import { fileURLToPath } from "node:url";
 import { createClient } from "@supabase/supabase-js";
 
@@ -99,14 +100,34 @@ function failSupabase(error, res, fallback = "Database request fail ho gayi.") {
 const cleanText = (value) => String(value ?? "").replace(/\u0000/g, "");
 const countLines = (value) => value.split(/\r?\n/).filter((l) => l.trim()).length;
 
+const aiNote = (name, text) => `[${name}: AI ne parha, is mein ghalti ho sakti hai]\n${text}`;
+async function tryReadWithAI(buffer, ext, originalName) {
+  if (!openai) return "";
+  try { return cleanText(await readWithAI(openai, buffer, ext, originalName)).trim(); }
+  catch (e) { console.error("AI file read failed:", e.message); return ""; }
+}
+
 async function extractFile(buffer, ext, originalName = "file") {
   if (ext === ".pdf") {
     const parsed = await pdfParse(buffer);
     const text = cleanText(parsed.text).trim();
-    if (!text) {
-      return { text: `[${originalName}: PDF save ho gayi, lekin is mein text nahi mila (shayad scanned/image wali PDF hai).]`, rowCount: parsed.numpages || 0, structured: null };
+    if (text.length < 20) {
+      // Scanned PDF (pictures of pages): the AI reads it when an AI key with credit is available.
+      const read = await tryReadWithAI(buffer, ext, originalName);
+      if (read) return { text: aiNote(originalName, read).slice(0, 250_000), rowCount: countLines(read), structured: null };
+      return { text: `[${originalName}: PDF save ho gayi, lekin is mein text nahi mila (scanned/image wali PDF). Isay parhne ke liye AI (OpenAI key aur credit) chahiye; AI chalne ke baad file dobara upload karein.]`, rowCount: parsed.numpages || 0, structured: null };
     }
     return { text: text.slice(0, 250_000), rowCount: countLines(text), structured: null };
+  }
+  if (ext === ".pptx") {
+    const { text, slides } = await extractPptx(buffer);
+    const clean = cleanText(text).trim();
+    return { text: (clean || `[${originalName}: PowerPoint mein text nahi mila.]`).slice(0, 250_000), rowCount: slides, structured: null };
+  }
+  if (imageMime[ext]) {
+    const read = await tryReadWithAI(buffer, ext, originalName);
+    if (read) return { text: aiNote(originalName, read).slice(0, 250_000), rowCount: countLines(read), structured: null };
+    return { text: `[${originalName}: tasveer save ho gayi, lekin isay parhne ke liye AI (OpenAI key aur credit) chahiye; AI chalne ke baad file dobara upload karein.]`, rowCount: 0, structured: null };
   }
   if (ext === ".docx") {
     const { value } = await mammoth.extractRawText({ buffer });
