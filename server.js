@@ -165,6 +165,24 @@ app.get("/api/health", asyncHandler(async (_req, res) => {
   const { error } = await supabase.from("files").select("id", { head: true, count: "exact" });
   if (error) {
     console.error("Health check: Supabase query failed:", error.message);
+    if (/fetch failed/i.test(error.message || "")) {
+      // Connection-level failure: find out why (bad URL, DNS, paused project) without exposing secrets.
+      const info = {};
+      try {
+        const u = new URL(supabaseUrl);
+        info.host = u.hostname; info.path = u.pathname;
+        try {
+          const r = await fetch(u.origin + "/rest/v1/", { headers: { apikey: supabaseKey }, signal: AbortSignal.timeout(8000) });
+          info.status = r.status;
+        } catch (e) { info.cause = e.cause?.code || e.cause?.message || e.message; }
+      } catch { info.invalidUrl = true; }
+      console.error("Supabase connection diagnosis:", JSON.stringify(info));
+      return res.status(503).json({
+        ok: false, aiConfigured: Boolean(openai), storageConfigured: false,
+        diagnosis: { invalidUrl: info.invalidUrl || false, cause: info.cause || null, status: info.status || null, urlHasPath: Boolean(info.path && info.path !== "/") },
+        error: "Server Supabase tak pahunch nahi pa raha (fetch failed). SUPABASE_URL ghalat ho sakta hai ya Supabase project paused hai."
+      });
+    }
     return res.status(503).json({
       ok: false, aiConfigured: Boolean(openai), storageConfigured: false,
       error: `Supabase connect hua lekin database check fail hua: ${error.message}. supabase-schema.sql run karein aur Environment Variables check karein.`
