@@ -52,13 +52,9 @@ app.post("/api/login", async (req, res) => {
   return res.status(401).json({ error: "Password ghalat hai." });
 });
 
-app.use("/api", (req, res, next) => {
-  if (!APP_PASSWORD) return passwordMissing(res);
-  const header = req.headers.authorization || "";
-  const token = header.startsWith("Bearer ") ? header.slice(7) : "";
-  if (verifyToken(token)) return next();
-  return res.status(401).json({ error: "Pehle password se login karein.", code: "login_required" });
-});
+// Password login has been turned off on request: all /api routes are open.
+// (To turn it back on, restore the check: verifyToken(Bearer token) or return 401.)
+app.use("/api", (_req, _res, next) => next());
 
 const publicDir = path.join(__dirname, "public");
 const isVercel = process.env.VERCEL === "1" || Boolean(process.env.VERCEL_ENV) || Boolean(process.env.VERCEL_URL);

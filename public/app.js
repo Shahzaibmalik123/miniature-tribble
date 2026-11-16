@@ -161,8 +161,8 @@ function setup() {
     else window.scrollTo({ top: 0, behavior: "smooth" });
   }));
   $("loginForm").addEventListener("submit", login);
-  $("logoutButton").addEventListener("click", logout);
-  if (getToken()) { unlockApp(); loadData(); } else showLogin();
+  $("logoutButton").hidden = true; // no login, so no logout
+  unlockApp(); loadData(); // password login turned off
 }
 function loadData() {
   api("/api/health").then(info => {
